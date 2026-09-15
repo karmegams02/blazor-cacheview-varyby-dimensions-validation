@@ -1,6 +1,6 @@
 ﻿@page "/{Region}/demo"
 @using System.Globalization
-@using CacheViewVaryByDimensions.Resources
+@using CacheViewVaryByDimensions
 @using Microsoft.AspNetCore.Components
 @inject NavigationManager Navigation
 @using Microsoft.Extensions.Localization
@@ -66,7 +66,7 @@
         <CachedGuidValue Scenario="Header" ValueLabel="Declared header" Value="@HeaderValue" />
     </CacheView>
 
-    <p>Send @HeaderName with values such as alpha and beta, then omit it on the same URL.</p>
+    <p>Open the current URL in a different browser to test the cache with a different header value.</p>
 </div> <br />
 
 <div class="cache-sample">
@@ -120,21 +120,7 @@
         <CachedGuidValue Scenario="User" ValueLabel="Request user" Value="@CurrentUserName" />
     </CacheView>
 
-    <p>Test users: admin/admin123 and user/user123</p>
-
-    <form action="/login" method="post">
-        <input type="hidden" name="region" value="@Region" />
-        <input type="hidden" name="returnUrl" value="@CurrentRelativeUri" />
-        <input name="username" placeholder="Username" />
-        <input name="password" type="password" placeholder="Password" />
-        <button type="submit">Login</button>
-    </form>
-
-    <form action="/logout" method="post">
-        <input type="hidden" name="region" value="@Region" />
-        <input type="hidden" name="returnUrl" value="@CurrentRelativeUri" />
-        <button type="submit">Logout</button>
-    </form>
+    <a href="/test-login">Change test user</a>
 </div> <br />
 
 <div class="cache-sample">

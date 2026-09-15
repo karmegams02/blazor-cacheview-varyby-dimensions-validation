@@ -1,0 +1,22 @@
+@page "/test-login"
+
+<PageTitle>Test user login</PageTitle>
+
+<h1>Test user login</h1>
+
+<p>Sign in here before opening the cache validation page.</p>
+<p>Test users: admin/admin123 and user/user123</p>
+
+<form action="/login" method="post">
+    <input type="hidden" name="region" value="de" />
+    <input type="hidden" name="returnUrl" value="/de/demo" />
+    <input name="username" placeholder="Username" />
+    <input name="password" type="password" placeholder="Password" />
+    <button type="submit">Login and open demo</button>
+</form>
+
+<form action="/logout" method="post">
+    <input type="hidden" name="region" value="de" />
+    <input type="hidden" name="returnUrl" value="/test-login" />
+    <button type="submit">Logout</button>
+</form>

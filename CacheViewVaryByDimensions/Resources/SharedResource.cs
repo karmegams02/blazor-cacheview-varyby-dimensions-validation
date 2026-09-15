@@ -1,4 +1,4 @@
-namespace CacheViewVaryByDimensions.Resources
+namespace CacheViewVaryByDimensions
 {
     public class SharedResource
     {

@@ -1,0 +1,26 @@
+<div>
+    <p>Initialized Guid: <strong>@_cachedId</strong></p>
+    <p>@ValueLabel: <strong>@DisplayValue</strong></p>
+    <p>Scenario: <strong>@Scenario</strong></p>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Scenario { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string ValueLabel { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    private Guid _cachedId;
+
+    private string DisplayValue =>
+        string.IsNullOrWhiteSpace(Value) ? "(missing)" : Value;
+
+    protected override void OnInitialized()
+    {
+        _cachedId = Guid.NewGuid();
+    }
+}

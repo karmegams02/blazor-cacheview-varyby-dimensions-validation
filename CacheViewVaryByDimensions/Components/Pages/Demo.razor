@@ -1,0 +1,221 @@
+﻿@page "/{Region}/demo"
+@using System.Globalization
+@using CacheViewVaryByDimensions.Resources
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager Navigation
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> Localizer
+
+<h1>CacheView vary-by validation</h1>
+
+<div class="cache-sample">
+    <b>Route parameter</b>
+    <p>Current region: <strong>@Region</strong></p>
+
+    <CacheView VaryByRoute="Region" ExpiresAfter="@CacheLifetime">
+        <CachedGuidValue Scenario="Route" ValueLabel="Region" Value="@Region" />
+    </CacheView>
+
+    <a href="/de/demo">Open /de/demo</a>
+    <a href="/fr/demo">Open /fr/demo</a>
+</div> <br />
+
+<div class="cache-sample">
+    <b>Named query parameters</b>
+    <p>Category: <strong>@Category</strong></p>
+    <p>UserType: <strong>@UserType</strong></p>
+    <p>Ignored query value: <strong>@DisplayValue(TrackingId)</strong></p>
+
+    <CacheView VaryByQuery="Category,UserType" ExpiresAfter="@CacheLifetime">
+        <CachedGuidValue Scenario="Named query" ValueLabel="Category / UserType"
+                         Value="@($"{Category} / {UserType}")" />
+    </CacheView>
+
+    <a href="/@Region/demo?Category=Books&UserType=Premium">Base named query</a>
+    <a href="/@Region/demo?Category=Laptop&UserType=Premium">Change declared Category</a>
+    <a href="/@Region/demo?Category=Books&UserType=Premium&TrackingId=alpha">Change undeclared TrackingId</a>
+    <a href="/@Region/demo?UserType=Premium&Category=Books">Reorder distinct names</a>
+</div> <br />
+<div class="cache-sample">
+    <b>Combined change helpers</b>
+    <p>Use these links to change more than one dimension at once and then restore the original entry.</p>
+
+    <a href="/fr/demo?Category=Laptop&UserType=Normal&TrackingId=beta">Change route and query together</a>
+    <a href="/de/demo?Category=Books&UserType=Premium&TrackingId=alpha">Change them back</a>
+
+</div>
+<div class="cache-sample">
+    <b>Wildcard query parameters</b>
+    <p>Current query string: <strong>@CurrentQueryString</strong></p>
+
+    <CacheView VaryByQuery="*" ExpiresAfter="@CacheLifetime">
+        <CachedGuidValue Scenario="Wildcard query" ValueLabel="Query string" Value="@CurrentQueryString" />
+    </CacheView>
+
+    <a href="/@Region/demo?Category=Books&UserType=Premium">Base wildcard query</a>
+    <a href="/@Region/demo?Category=Books&UserType=Premium&TrackingId=alpha">Add ignored parameter</a>
+    <a href="/@Region/demo?Category=Books&Category=Laptop&UserType=Premium">Repeat Category value</a>
+    <a href="/@Region/demo?category=Books&UserType=Premium">Change query-name casing</a>
+</div> <br />
+
+<div class="cache-sample">
+    <b>Header parameter</b>
+    <p>@HeaderName: <strong>@HeaderValue</strong></p>
+
+    <CacheView VaryByHeader="@HeaderName" ExpiresAfter="@CacheLifetime">
+        <CachedGuidValue Scenario="Header" ValueLabel="Declared header" Value="@HeaderValue" />
+    </CacheView>
+
+    <p>Send @HeaderName with values such as alpha and beta, then omit it on the same URL.</p>
+</div> <br />
+
+<div class="cache-sample">
+    <b>Cookie parameter</b>
+    <p>@CookieName: <strong>@DisplayValue(CookieValue)</strong></p>
+
+    <CacheView VaryByCookie="@CookieName" ExpiresAfter="@CacheLifetime">
+        <CachedGuidValue Scenario="Cookie" ValueLabel="Cookie value" Value="@CookieValue" />
+    </CacheView>
+
+    <form action="/cookie/save" method="post">
+        <input type="hidden" name="region" value="@Region" />
+        <input type="hidden" name="returnUrl" value="@CurrentRelativeUri" />
+        <button type="submit">@(CookieExists ? "Update Cookie" : "Create Cookie")</button>
+    </form>
+
+    <form action="/cookie/delete" method="post">
+        <input type="hidden" name="region" value="@Region" />
+        <input type="hidden" name="returnUrl" value="@CurrentRelativeUri" />
+        <button type="submit">Delete Cookie</button>
+    </form>
+</div> <br />
+
+<div class="cache-sample">
+    <b>Culture parameter</b>
+    <p>Current culture / UI culture: <strong>@CurrentCultureDisplay</strong></p>
+    <p>@Localizer["Welcome"]</p>
+
+    <CacheView VaryByCulture="true" ExpiresAfter="@CacheLifetime">
+        <CachedGuidValue Scenario="Culture" ValueLabel="Culture / UI culture" Value="@CurrentCultureDisplay" />
+    </CacheView>
+
+    <form action="/culture/set" method="get">
+        <input type="hidden" name="region" value="@Region" />
+        <input type="hidden" name="returnUrl" value="@CurrentRelativeUri" />
+
+        <select name="culture">
+            <option value="en-US" selected="@(CultureInfo.CurrentUICulture.Name == "en-US")">English</option>
+            <option value="fr-FR" selected="@(CultureInfo.CurrentUICulture.Name == "fr-FR")">French</option>
+        </select>
+
+        <button type="submit">Change language</button>
+    </form>
+</div> <br />
+
+<div class="cache-sample">
+    <b>User parameter</b>
+    <p>Current request user: <strong>@CurrentUserName</strong></p>
+
+    <CacheView VaryByUser="true" ExpiresAfter="@CacheLifetime">
+        <CachedGuidValue Scenario="User" ValueLabel="Request user" Value="@CurrentUserName" />
+    </CacheView>
+
+    <p>Test users: admin/admin123 and user/user123</p>
+
+    <form action="/login" method="post">
+        <input type="hidden" name="region" value="@Region" />
+        <input type="hidden" name="returnUrl" value="@CurrentRelativeUri" />
+        <input name="username" placeholder="Username" />
+        <input name="password" type="password" placeholder="Password" />
+        <button type="submit">Login</button>
+    </form>
+
+    <form action="/logout" method="post">
+        <input type="hidden" name="region" value="@Region" />
+        <input type="hidden" name="returnUrl" value="@CurrentRelativeUri" />
+        <button type="submit">Logout</button>
+    </form>
+</div> <br />
+
+<div class="cache-sample">
+    <b>No variation control</b>
+    <p>This section intentionally reads the current user without any vary-by dimension.</p>
+    <p>Current request user outside the cache: <strong>@CurrentUserName</strong></p>
+
+    <CacheView ExpiresAfter="@CacheLifetime">
+        <CurrentUserSnapshot />
+    </CacheView>
+</div> <br />
+
+<div class="cache-sample">
+    <b>Custom vary-by parameter</b>
+    <p>Computed A/B bucket: <strong>@AbBucket</strong></p>
+
+    <CacheView VaryBy="@AbBucket" ExpiresAfter="@CacheLifetime">
+        <CachedGuidValue Scenario="Custom A/B bucket" ValueLabel="Computed bucket" Value="@AbBucket" />
+    </CacheView>
+
+    <form action="/bucket/set" method="post">
+        <input type="hidden" name="region" value="@Region" />
+        <input type="hidden" name="returnUrl" value="@CurrentRelativeUri" />
+        <button type="submit" name="bucket" value="A">Assign bucket A</button>
+        <button type="submit" name="bucket" value="B">Assign bucket B</button>
+    </form>
+</div> <br />
+
+@code {
+    private const string CookieName = "testCookie";
+    private const string HeaderName = "User-Agent";
+    private const string AbBucketCookieName = "abBucket";
+    private static readonly TimeSpan CacheLifetime = TimeSpan.FromMinutes(10);
+
+    [Parameter]
+    public string Region { get; set; } = "default";
+
+    [SupplyParameterFromQuery]
+    private string Category { get; set; } = "Books";
+
+    [SupplyParameterFromQuery]
+    private string UserType { get; set; } = "Premium";
+
+    [SupplyParameterFromQuery]
+    private string? TrackingId { get; set; }
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? CookieValue =>
+        HttpContext?.Request.Cookies[CookieName];
+
+    private bool CookieExists =>
+        !string.IsNullOrWhiteSpace(CookieValue);
+
+    private string CurrentQueryString =>
+        DisplayValue(HttpContext?.Request.QueryString.Value);
+
+    private string HeaderValue =>
+        DisplayValue(HttpContext?.Request.Headers[HeaderName].ToString());
+
+    private string CurrentCultureDisplay =>
+        $"{CultureInfo.CurrentCulture.Name} / {CultureInfo.CurrentUICulture.Name}";
+
+    private string CurrentUserName =>
+        HttpContext?.User.Identity?.Name ?? "anonymous";
+
+    private string AbBucket =>
+        (HttpContext?.Request.Cookies[AbBucketCookieName] ?? "A").Equals("B", StringComparison.OrdinalIgnoreCase)
+            ? "bucket-b"
+            : "bucket-a";
+
+    private string CurrentRelativeUri
+    {
+        get
+        {
+            var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+            return string.IsNullOrWhiteSpace(relativePath) ? "/" : $"/{relativePath}";
+        }
+    }
+
+    private static string DisplayValue(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "(missing)" : value;
+}

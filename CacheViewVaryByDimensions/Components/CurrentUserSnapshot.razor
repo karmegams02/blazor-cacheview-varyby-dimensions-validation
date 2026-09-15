@@ -1,0 +1,18 @@
+<div>
+    <p>Initialized Guid: <strong>@_cachedId</strong></p>
+    <p>Observed user inside non-varying cache entry: <strong>@_observedUserName</strong></p>
+</div>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private Guid _cachedId;
+    private string _observedUserName = "anonymous";
+
+    protected override void OnInitialized()
+    {
+        _cachedId = Guid.NewGuid();
+        _observedUserName = HttpContext?.User.Identity?.Name ?? "anonymous";
+    }
+}

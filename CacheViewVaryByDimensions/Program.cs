@@ -2,6 +2,7 @@ using CacheViewVaryByDimensions.Components;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Security.Claims;
@@ -9,6 +10,7 @@ using System.Text.RegularExpressions;
 
 const string CookieName = "testCookie";
 const string AbBucketCookieName = "abBucket";
+const string TestHeaderName = "X-Cache-Test";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +34,15 @@ var localizationOptions = new RequestLocalizationOptions()
     SupportedCultures = supportedCultures,
     SupportedUICultures = supportedCultures
 };
+app.Use(async (context, next) =>
+{
+    if (context.Request.Query.TryGetValue("AcceptLanguage", out var acceptLanguage))
+    {
+        context.Request.Headers.AcceptLanguage = acceptLanguage.ToString();
+    }
+
+    await next(context);
+});
 app.UseRequestLocalization(localizationOptions);
 
 
@@ -91,6 +102,22 @@ app.UseStatusCodePagesWithReExecute(
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Query.TryGetValue("HeaderValue", out var headerValue))
+    {
+        if (string.IsNullOrWhiteSpace(headerValue.ToString()))
+        {
+            context.Request.Headers.Remove(TestHeaderName);
+        }
+        else
+        {
+            context.Request.Headers[TestHeaderName] = headerValue.ToString();
+        }
+    }
+
+    await next(context);
+});
 app.MapStaticAssets();
 app.MapGet("/culture/set",
 (
@@ -114,6 +141,30 @@ app.MapGet("/culture/set",
             new RequestCulture(culture)));
 
     return Results.LocalRedirect(ResolveReturnUrl(returnUrl, region));
+});
+
+app.MapGet("/culture/accept-language",
+(
+    string language,
+    string? region,
+    string? returnUrl,
+    HttpContext context
+) =>
+{
+    var normalizedLanguage = supportedCultures
+        .FirstOrDefault(culture => culture.Name.Equals(language, StringComparison.OrdinalIgnoreCase))
+        ?.Name ?? localizationOptions.DefaultRequestCulture.Culture.Name;
+
+    context.Response.Cookies.Delete(
+        CookieRequestCultureProvider.DefaultCookieName,
+        new CookieOptions { Path = "/" });
+
+    var redirectUrl = QueryHelpers.AddQueryString(
+        ResolveReturnUrl(returnUrl, region),
+        "AcceptLanguage",
+        normalizedLanguage);
+
+    return Results.LocalRedirect(redirectUrl);
 });
 
 app.MapPost("/cookie/save", async (HttpContext context) =>

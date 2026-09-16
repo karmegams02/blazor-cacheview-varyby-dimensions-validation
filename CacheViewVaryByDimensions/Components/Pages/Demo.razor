@@ -2,6 +2,7 @@
 @using System.Globalization
 @using CacheViewVaryByDimensions
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Localization
 @inject NavigationManager Navigation
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> Localizer
@@ -58,7 +59,10 @@
         <CachedGuidValue Scenario="Header" ValueLabel="Declared header" Value="@HeaderValue" />
     </CacheView>
 
-    <p>Open the current URL in a different browser to test the cache with a different header value.</p>
+    <a href="/@Region/demo?HeaderValue=populated">Populated header</a>
+    <a href="/@Region/demo?HeaderValue=populated">Repeat populated header</a>
+    <a href="/@Region/demo?HeaderValue=">Omitted header</a>
+    <a href="/@Region/demo?HeaderValue=">Repeat omitted header</a>
 </div> <br />
 
 <div class="cache-sample">
@@ -85,6 +89,8 @@
 <div class="cache-sample">
     <b>Culture parameter</b>
     <p>Current culture / UI culture: <strong>@CurrentCultureDisplay</strong></p>
+    <p>Accept-Language request: <strong>@AcceptLanguageDisplay</strong></p>
+    <p>Selected provider: <strong>@CurrentCultureProvider</strong></p>
     <p>@Localizer["Welcome"]</p>
 
     <CacheView VaryByCulture="true" ExpiresAfter="@CacheLifetime">
@@ -101,6 +107,12 @@
         </select>
 
         <button type="submit">Change language</button>
+    </form>
+
+    <form action="/culture/accept-language" method="get">
+        <input type="hidden" name="region" value="@Region" />
+        <button type="submit" name="language" value="en-US">Request en-US via Accept-Language</button>
+        <button type="submit" name="language" value="fr-FR">Request fr-FR via Accept-Language</button>
     </form>
 </div> <br />
 
@@ -143,7 +155,7 @@
 
 @code {
     private const string CookieName = "testCookie";
-    private const string HeaderName = "User-Agent";
+    private const string HeaderName = "X-Cache-Test";
     private const string AbBucketCookieName = "abBucket";
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromMinutes(10);
 
@@ -176,6 +188,12 @@
 
     private string CurrentCultureDisplay =>
         $"{CultureInfo.CurrentCulture.Name} / {CultureInfo.CurrentUICulture.Name}";
+
+    private string AcceptLanguageDisplay =>
+        DisplayValue(HttpContext?.Request.Headers.AcceptLanguage.ToString());
+
+    private string CurrentCultureProvider =>
+        HttpContext?.Features.Get<IRequestCultureFeature>()?.Provider?.GetType().Name ?? "(none)";
 
     private string CurrentUserName =>
         HttpContext?.User.Identity?.Name ?? "anonymous";
